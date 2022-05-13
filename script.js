@@ -1,26 +1,91 @@
-const handleGetJsonLinks = async (courseId) => {
-    const assignments = {};
-    const tags = document.getElementsByClassName(
-        "fOyUs_bGBk eHiXd_bGBk eHiXd_brAJ eHiXd_doqw eHiXd_bNlk eHiXd_cuTS"
-    );
+const handleGetAssignments = async (urls) => {
+    const promises = [];
 
-    for (let index in tags) {
-        const tag = tags[index];
-        const link = String(tag["href"]).split("/");
-        const assignmentId = link.pop();
-        if (assignmentId !== "undefined") {
-            await $.get(
-                `https://alunos2.kenzie.com.br/courses/${courseId}/gradebook/speed_grader.json?assignment_id=${assignmentId}`
-            ).then((res) => {
-                assignments[res.id] = res.submissions
-                    .filter((submission) => submission.submitted_at)
-                    .map((submission) => submission.user_id);
-                return res;
-            });
-        }
-        console.log("Carregando...");
+    for (let url of urls) {
+        promises.push($.get(url));
     }
-    console.log("Conteúdo copiado para área de transferência!");
-    return JSON.stringify(assignments);
+    const assignments = await Promise.all(promises);
+
+    return assignments;
 };
-copy(await handleGetJsonLinks(95));
+
+const handleGetJsonLinks = (courseId, sprint) => {
+    const jsonLinks = [];
+    const anchorTagClasses =
+        "fOyUs_bGBk eHiXd_bGBk eHiXd_brAJ eHiXd_doqw eHiXd_bNlk eHiXd_cuTS";
+    const anchorTags = document.getElementsByClassName(anchorTagClasses);
+
+    for (let index in anchorTags) {
+        const anchorTag = anchorTags[index];
+        const splitedHrefLink = String(anchorTag["href"]).split("/");
+        const assignmentId = splitedHrefLink.pop();
+
+        if (assignmentId !== "undefined" && anchorTag.children.length) {
+            if (anchorTag.children[0].children.length) {
+                const titulo = anchorTag.children[0].children[0].textContent;
+                if (
+                    !titulo.includes("Extra") &&
+                    !titulo.includes("Presença") &&
+                    titulo.includes(`S${sprint}`)
+                ) {
+                    console.log(anchorTag.children[0].children[0].textContent);
+                    jsonLinks.push(
+                        `https://alunos2.kenzie.com.br/courses/${courseId}/gradebook/speed_grader.json?assignment_id=${assignmentId}`
+                    );
+                }
+            }
+        }
+    }
+
+    return jsonLinks;
+};
+
+const handleConvertToCsv = (submissions) => {
+    const tabeta = [[]];
+    let maior = 0;
+    for (let assignmentId in submissions) {
+        const submission = submissions[assignmentId];
+        if (submission.length > maior) {
+            maior = submission.length;
+        }
+        tabeta[0].push(assignmentId);
+    }
+    for (let index = 1; index < maior; index++) {
+        for (let assignmentId in submissions) {
+            const submission = submissions[assignmentId];
+            if (tabeta[index]) {
+                tabeta[index].push(submission.shift());
+            } else {
+                tabeta[index] = [];
+                tabeta[index].push(submission.shift());
+            }
+        }
+    }
+
+    console.log("Conteúdo copiado para área de transferência!");
+    return tabeta.map((list) => list.join(",")).join("\n");
+};
+
+const handleTreatAssignments = async (courseId) => {
+    const submissions = {};
+    let assignments = [];
+    for (let sprint = 1; sprint <= 8; sprint++) {
+        const urls = handleGetJsonLinks(courseId, sprint);
+        assignments = await handleGetAssignments(urls);
+        for (const assignment of assignments) {
+            submissions[assignment.id] = assignment.submissions.reduce(
+                (acumulator, submission) => {
+                    if (submission.submitted_at) {
+                        return [...acumulator, submission.user_id];
+                    }
+                    return [...acumulator];
+                },
+                []
+            );
+        }
+    }
+    return handleConvertToCsv(submissions);
+};
+
+copy(await handleTreatAssignments(95));
+
