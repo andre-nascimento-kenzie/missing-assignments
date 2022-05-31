@@ -10,33 +10,32 @@ const handleGetAssignments = async (urls) => {
 };
 
 const handleGetJsonLinks = (courseId, sprint) => {
+
     const jsonLinks = [];
     const anchorTagClasses =
-        "fOyUs_bGBk eHiXd_bGBk eHiXd_brAJ eHiXd_doqw eHiXd_bNlk eHiXd_cuTS";
+        "assignment-name";
     const anchorTags = document.getElementsByClassName(anchorTagClasses);
-
     for (let index in anchorTags) {
         const anchorTag = anchorTags[index];
         const splitedHrefLink = String(anchorTag["href"]).split("/");
         const assignmentId = splitedHrefLink.pop();
 
-        if (assignmentId !== "undefined" && anchorTag.children.length) {
-            if (anchorTag.children[0].children.length) {
-                const titulo = anchorTag.children[0].children[0].textContent;
-                if (
-                    !titulo.includes("Extra") &&
-                    !titulo.includes("Presença") &&
-                    titulo.includes(`S${sprint}`)
-                ) {
-                    console.log(anchorTag.children[0].children[0].textContent);
-                    jsonLinks.push(
-                        `https://alunos2.kenzie.com.br/courses/${courseId}/gradebook/speed_grader.json?assignment_id=${assignmentId}`
-                    );
-                }
+        if (assignmentId !== "undefined") {
+
+            const titulo = anchorTag.textContent;
+            if (
+                !titulo.includes("Extra") &&
+                !titulo.includes("Presença") &&
+                titulo.includes(`S${sprint}`)
+            ) {
+                console.log(titulo);
+                jsonLinks.push(
+                    `https://alunos2.kenzie.com.br/courses/${courseId}/gradebook/speed_grader.json?assignment_id=${assignmentId}`
+                );
             }
+
         }
     }
-
     return jsonLinks;
 };
 
@@ -87,5 +86,4 @@ const handleTreatAssignments = async (courseId) => {
     return handleConvertToCsv(submissions);
 };
 
-copy(await handleTreatAssignments(95));
-
+copy(await handleTreatAssignments(99));
