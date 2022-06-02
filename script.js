@@ -72,7 +72,7 @@ const handleTreatAssignments = async (courseId) => {
         const urls = handleGetJsonLinks(courseId, sprint);
         assignments = await handleGetAssignments(urls);
         for (const assignment of assignments) {
-            submissions[assignment.id] = assignment.submissions.reduce(
+            submissions[assignment.title] = assignment.submissions.reduce(
                 (acumulator, submission) => {
                     if (submission.submitted_at) {
                         return [...acumulator, submission.user_id];
