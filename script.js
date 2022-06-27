@@ -1,3 +1,4 @@
+
 const handleGetAssignments = async (urls) => {
     const promises = [];
 
@@ -10,10 +11,9 @@ const handleGetAssignments = async (urls) => {
 };
 
 const handleGetJsonLinks = (courseId, sprint) => {
-
     const jsonLinks = [];
-    const anchorTagClasses =
-        "assignment-name";
+    const anchorTagClasses = "assignment-name";
+
     const anchorTags = document.getElementsByClassName(anchorTagClasses);
     for (let index in anchorTags) {
         const anchorTag = anchorTags[index];
@@ -21,7 +21,6 @@ const handleGetJsonLinks = (courseId, sprint) => {
         const assignmentId = splitedHrefLink.pop();
 
         if (assignmentId !== "undefined") {
-
             const titulo = anchorTag.textContent;
             if (
                 !titulo.includes("Extra") &&
@@ -33,7 +32,6 @@ const handleGetJsonLinks = (courseId, sprint) => {
                     `https://alunos2.kenzie.com.br/courses/${courseId}/gradebook/speed_grader.json?assignment_id=${assignmentId}`
                 );
             }
-
         }
     }
     return jsonLinks;
@@ -86,4 +84,23 @@ const handleTreatAssignments = async (courseId) => {
     return handleConvertToCsv(submissions);
 };
 
-copy(await handleTreatAssignments(99));
+const csv = await handleTreatAssignments(99);
+const hiddenElement = document.createElement("a");
+hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
+hiddenElement.target = "_blank";
+hiddenElement.download = "Submited.csv";
+hiddenElement.click();
+
+
+/*
+const form = document.getElementById("form");
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const csv = await handleTreatAssignments(99);
+    const hiddenElement = document.createElement("a");
+    hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
+    hiddenElement.target = "_blank";
+    hiddenElement.download = "Submited.csv";
+    hiddenElement.click();
+    
+});*/
